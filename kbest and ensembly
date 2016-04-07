@@ -1,0 +1,52 @@
+#SelectKBest
+predictors = data.columns[2:]
+
+# Perform feature selection
+selector = SelectKBest(f_classif, k=50)
+selector = selector.fit(data[predictors], data.target)
+
+# Get the raw p-values for each feature, and transform from p-values into scores
+scores = -np.log10(selector.pvalues_)
+sort_idx = np.argsort(selector.scores_)[::-1]
+#print predictors[sort_idx[:40]]
+
+fig = plt.figure(figsize=(18,5))
+plt.bar(range(len(predictors)), selector.scores_)
+plt.xticks(range(len(predictors)), predictors, rotation='vertical')
+plt.show()
+
+# Pick only the four best features.
+predictors = predictors[sort_idx[:40]]
+
+kforest = RandomForestClassifier(350)
+kforest.fit(data[predictors].iloc[:],target.iloc[:])
+
+test = test_data[predictors]
+
+kprediction = kforest.predict_proba(test.iloc[:])
+
+kresult = kprediction[:,1]
+
+
+koutput = pandas.DataFrame(kresult)
+#output.to_csv("output4.csv")
+
+
+
+
+
+#Ensembly
+
+k_submission = pandas.read_csv("koutput.csv")
+best_submission = pandas.read_csv("output1.csv")
+
+k_submission = k_submission.drop("ID",1)
+
+best_submission = best_submission.drop("ID",1)
+
+best_submission *= 0.49373
+k_submission *= 0.49570
+
+result = (best_submission + k_submission)/(0.49373 + 0.49570)
+
+result.to_csv("output3.csv")
